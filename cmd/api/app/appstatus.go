@@ -3,13 +3,15 @@ package app
 import (
 	"encoding/json"
 	"net/http"
+
+	"go-server/internal"
 )
 
 func (app *Application) statusHandler(w http.ResponseWriter, r *http.Request) {
 	currentStatus := AppStatus{
 		Status:  "Available",
 		Env:     app.Config.Env,
-		Version: Version,
+		Version: internal.Version,
 	}
 
 	js, err := json.MarshalIndent(currentStatus, "", "\t")
@@ -22,4 +24,4 @@ func (app *Application) statusHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(js)
 }
 
-//curl -i -H "Accept: application/json" -H "Content-Type: application/json" -X GET http://localhost:8080/status
+// curl -i -H "Accept: application/json" -H "Content-Type: application/json" -X GET http://localhost:8080/status
