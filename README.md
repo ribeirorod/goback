@@ -4,7 +4,7 @@ v.0.0.1
 
 ### `go run cmd/api/*.go`
 
-> The main purpose of this project is to learn GO by doing. \n
+> The main purpose of this project is to learn GO by doing.
 > Althoug having a elegant, scalable backend as a result is nice to have :)
 
 
