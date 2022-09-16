@@ -1,20 +1,36 @@
 package app
 
 import (
-	"go-server/models"
 	"log"
+
+	"go-server/models"
 )
 
-const Version = "0.0.1"
-
 type Config struct {
-	Port int
+	Port string
 	Env  string
 	Db   struct {
 		Dsn string
 	}
 	JWT struct {
 		Secret string
+	}
+}
+
+func NewDefaultConfig() *Config {
+	return &Config{
+		Port: "8080",
+		Env:  "development",
+		Db: struct {
+			Dsn string
+		}{
+			Dsn: "localhost",
+		},
+		JWT: struct {
+			Secret string
+		}{
+			Secret: "secret",
+		},
 	}
 }
 
@@ -25,7 +41,7 @@ type AppStatus struct {
 }
 
 type Application struct {
-	Config Config
+	Config *Config
 	Logger *log.Logger
 	Models models.Models
 }

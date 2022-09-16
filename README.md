@@ -1,10 +1,16 @@
 ## GO Server GO!#
 
-v.0.0.1
+v.0.1.0
 
-### `go run cmd/api/*.go`
+### Build
 
-> The main purpose of this project is to learn GO by doing. 
+To build the project, run the following command:
+
+```bash
+$ make build
+```
+
+> The main purpose of this project is to learn GO by doing.
 > Althoug having a elegant, scalable backend as a result is nice to have :)
 
 

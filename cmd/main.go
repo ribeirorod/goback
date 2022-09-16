@@ -1,44 +1,47 @@
 package main
 
-// BaServer application entry point
+// Backend Server application entry point
 
 import (
-	"go-server/cmd/api/app"
-	"go-server/models"
 	"log"
 	"net/http"
 	"os"
-	"strconv"
 	"time"
+
+	"go-server/cmd/api/app"
+	"go-server/models"
 
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
 
 func main() {
-
-	var cfg app.Config
+	cfg := app.NewDefaultConfig()
 
 	// Get server config data from .env file
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
+	godotenv.Load()
 
 	// Get config data from .env file
-	cfg.Env = os.Getenv("ENV")
-	cfg.Port, _ = strconv.Atoi(os.Getenv("SERVER_PORT"))
-	cfg.Db.Dsn = os.Getenv("DB_DSN")
-	cfg.JWT.Secret = os.Getenv("JWT_SECRET")
+	if v, ok := os.LookupEnv("ENV"); ok {
+		cfg.Env = v
+	}
+	if v, ok := os.LookupEnv("SERVER_PORT"); ok {
+		cfg.Port = v
+	}
+	if v, ok := os.LookupEnv("DB_DSN"); ok {
+		cfg.Db.Dsn = v
+	}
+	if v, ok := os.LookupEnv("JWT_SECRET"); ok {
+		cfg.JWT.Secret = v
+	}
 
 	// Create a logger ; log to stdout
 	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
 
-	// Lauch DB connection needs to retunrn a DB connection pool
+	// Launch DB connection needs to return a DB connection pool
 	db, err := app.OpenDB(cfg)
 	if err != nil {
-		log.Fatal(err)
-		return // exit if error
+		log.Fatalf("could not open DB: %s", err)
 	}
 	defer db.Close()
 
@@ -51,7 +54,7 @@ func main() {
 
 	// Start server
 	srv := &http.Server{
-		Addr:         ":" + strconv.Itoa(cfg.Port),
+		Addr:         ":" + cfg.Port,
 		Handler:      app.Routes(),
 		IdleTimeout:  time.Minute,
 		ReadTimeout:  time.Second * 10,
@@ -62,7 +65,6 @@ func main() {
 
 	err = srv.ListenAndServe()
 	if err != nil {
-		log.Println(err)
+		log.Fatal(err)
 	}
-
 }
