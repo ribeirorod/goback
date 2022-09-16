@@ -69,14 +69,13 @@ func TellASecret() {
 	h.Write([]byte(data))
 
 	// Get result and encode as hexadecimal string
-	//sha := hex.EncodeToString(h.Sum(nil))
+	// sha := hex.EncodeToString(h.Sum(nil))
 
 	// append result to the existing .env file
 
 }
 
-func OpenDB(cfg Config) (*sql.DB, error) {
-
+func OpenDB(cfg *Config) (*sql.DB, error) {
 	db, err := sql.Open("postgres", cfg.Db.Dsn)
 	if err != nil {
 		return nil, err
