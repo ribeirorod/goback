@@ -1,9 +1,9 @@
-package app
+package utils
 
 import (
 	"crypto/hmac"
 	"crypto/sha256"
-	"database/sql"
+
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -73,18 +73,4 @@ func TellASecret() {
 
 	// append result to the existing .env file
 
-}
-
-func OpenDB(cfg *Config) (*sql.DB, error) {
-	db, err := sql.Open("postgres", cfg.Db.Dsn)
-	if err != nil {
-		return nil, err
-	}
-
-	// PING Verifies that the database connection is still alive.
-	if err := db.Ping(); err != nil {
-		return nil, err
-	}
-
-	return db, nil
 }

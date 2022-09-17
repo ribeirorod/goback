@@ -1,9 +1,12 @@
 package app
 
 import (
+	"database/sql"
+	"go-server/cmd/models"
 	"log"
+	"os"
 
-	"go-server/models"
+	"github.com/joho/godotenv"
 )
 
 type Config struct {
@@ -15,6 +18,42 @@ type Config struct {
 	JWT struct {
 		Secret string
 	}
+}
+
+type AppStatus struct {
+	Status  string `json:"status"`
+	Env     string `json:"environment"`
+	Version string `json:"version"`
+}
+
+type Application struct {
+	Config *Config
+	Logger *log.Logger
+	Models models.Models
+}
+
+// check for config on .env and assign default value if none
+func GetAppConfig() *Config {
+	cfg := NewDefaultConfig()
+
+	// Get server config data from .env file
+	godotenv.Load()
+
+	// Get config data from .env file
+	if v, ok := os.LookupEnv("ENV"); ok {
+		cfg.Env = v
+	}
+	if v, ok := os.LookupEnv("SERVER_PORT"); ok {
+		cfg.Port = v
+	}
+	if v, ok := os.LookupEnv("DB_DSN"); ok {
+		cfg.Db.Dsn = v
+	}
+	if v, ok := os.LookupEnv("JWT_SECRET"); ok {
+		cfg.JWT.Secret = v
+	}
+
+	return cfg
 }
 
 func NewDefaultConfig() *Config {
@@ -34,14 +73,16 @@ func NewDefaultConfig() *Config {
 	}
 }
 
-type AppStatus struct {
-	Status  string `json:"status"`
-	Env     string `json:"environment"`
-	Version string `json:"version"`
-}
+func OpenDB(cfg *Config) (*sql.DB, error) {
+	db, err := sql.Open("postgres", cfg.Db.Dsn)
+	if err != nil {
+		return nil, err
+	}
 
-type Application struct {
-	Config *Config
-	Logger *log.Logger
-	Models models.Models
+	// PING Verifies that the database connection is still alive.
+	if err := db.Ping(); err != nil {
+		return nil, err
+	}
+
+	return db, nil
 }

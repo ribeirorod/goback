@@ -3,6 +3,7 @@ package app
 import (
 	"net/http"
 
+	"github.com/graphql-go/handler"
 	"github.com/julienschmidt/httprouter"
 )
 
@@ -16,18 +17,25 @@ func (app *Application) Routes() http.Handler {
 	// Signin route relies on jwt middleware
 	router.HandlerFunc(http.MethodGet, "/v1/signin", app.Signin)
 
-	router.HandlerFunc(http.MethodGet, "/status", app.statusHandler)
+	router.HandlerFunc(http.MethodGet, "/status", app.StatusHandler)
 
 	// Get a single user.
-	router.HandlerFunc(http.MethodGet, "/v1/user/:id", app.getOneUser)
+	router.HandlerFunc(http.MethodGet, "/v1/user/:id", app.GetOneUser)
 
 	// Edit update a single user.
-	router.HandlerFunc(http.MethodGet, "/v1/edit/:id", app.updateUser)
+	router.HandlerFunc(http.MethodGet, "/v1/edit/:id", app.UpdateUser)
 
 	// Add a new user.
-	router.HandlerFunc(http.MethodPost, "/v1/user/add", app.addUser)
+	router.HandlerFunc(http.MethodPost, "/v1/user/add", app.AddUser)
+
+	h := handler.New(&handler.Config{
+		Schema:   &MySchema,
+		Pretty:   true,
+		GraphiQL: false,
+	})
 
 	// GraphQL route
-	router.HandlerFunc(http.MethodPost, "/graphql", app.GraphQLHandler)
-	return app.enableCORS(router)
+	router.Handler(http.MethodPost, "/graphql", h)
+	//router.HandlerFunc(http.MethodPost, "/graphql", GraphQLHandler)
+	return app.EnableCORS(router)
 }

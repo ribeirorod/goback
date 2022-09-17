@@ -7,7 +7,7 @@ import (
 	"go-server/internal"
 )
 
-func (app *Application) statusHandler(w http.ResponseWriter, r *http.Request) {
+func (app *Application) StatusHandler(w http.ResponseWriter, r *http.Request) {
 	currentStatus := AppStatus{
 		Status:  "Available",
 		Env:     app.Config.Env,
@@ -23,5 +23,3 @@ func (app *Application) statusHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write(js)
 }
-
-// curl -i -H "Accept: application/json" -H "Content-Type: application/json" -X GET http://localhost:8080/status

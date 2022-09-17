@@ -9,31 +9,13 @@ import (
 	"time"
 
 	"go-server/cmd/api/app"
-	"go-server/models"
+	"go-server/cmd/models"
 
-	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
 
 func main() {
-	cfg := app.NewDefaultConfig()
-
-	// Get server config data from .env file
-	godotenv.Load()
-
-	// Get config data from .env file
-	if v, ok := os.LookupEnv("ENV"); ok {
-		cfg.Env = v
-	}
-	if v, ok := os.LookupEnv("SERVER_PORT"); ok {
-		cfg.Port = v
-	}
-	if v, ok := os.LookupEnv("DB_DSN"); ok {
-		cfg.Db.Dsn = v
-	}
-	if v, ok := os.LookupEnv("JWT_SECRET"); ok {
-		cfg.JWT.Secret = v
-	}
+	cfg := app.GetAppConfig()
 
 	// Create a logger ; log to stdout
 	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)

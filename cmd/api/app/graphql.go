@@ -3,19 +3,24 @@ package app
 import (
 	"encoding/json"
 	"errors"
-	"go-server/models"
+	"fmt"
+	"go-server/cmd/api/auth"
+	"go-server/cmd/models"
+	"io"
+	"log"
 	"net/http"
 
 	"github.com/graphql-go/graphql"
+	"golang.org/x/crypto/bcrypt"
 )
 
-var data map[int]models.User
-
-// instantiate a new DB connection
+var cfg = NewDefaultConfig()
+var db, _ = OpenDB(cfg)
+var m = models.NewModels(db)
 
 // Define our data types to be used in the GraphQL schema
 var userType = graphql.NewObject(graphql.ObjectConfig{
-	Name: "user",
+	Name: "User",
 	Fields: graphql.Fields{
 		"id": &graphql.Field{
 			Type: graphql.Int,
@@ -29,68 +34,121 @@ var userType = graphql.NewObject(graphql.ObjectConfig{
 		"password": &graphql.Field{
 			Type: graphql.String,
 		},
-		"usergroups": &graphql.Field{
+		/* 		"usergroups": &graphql.Field{
 			Type: graphql.NewList(graphql.Int),
+		}, */
+	}})
+
+var loginType = graphql.NewObject(graphql.ObjectConfig{
+	Name: "login",
+	Fields: graphql.Fields{
+		"email": &graphql.Field{
+			Type: graphql.String,
+		},
+		"password": &graphql.Field{
+			Type: graphql.String,
 		},
 	}})
 
-var UserField = &graphql.Field{
-	Type:        userType,
-	Description: "Get User by ID",
-	Args: graphql.FieldConfigArgument{
-		"id": &graphql.ArgumentConfig{
-			Type: graphql.Int,
+// root mutation
+var rootMutation = graphql.NewObject(graphql.ObjectConfig{
+	Name: "Mutation",
+	Fields: graphql.Fields{
+		"login": &graphql.Field{
+			Type: userType,
+			Args: graphql.FieldConfigArgument{
+				"email": &graphql.ArgumentConfig{
+					Type: graphql.String,
+				},
+				"password": &graphql.ArgumentConfig{
+					Type: graphql.String,
+				},
+			},
+			Resolve: func(params graphql.ResolveParams) (interface{}, error) {
+				//defer db.Close()
+				// print the params
+				log.Println("found a password", params.Args["password"])
+				var cred Credentials
+				cred.Password, _ = params.Args["password"].(string)
+				cred.Email, _ = params.Args["email"].(string)
+
+				user, _ := m.DB.GetUserByUsername(cred.Email)
+				err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(cred.Password))
+
+				if err != nil {
+					return nil, errors.New("invalid username or password")
+				}
+				jwtbytes, _ := auth.TokenGen(user, cfg.JWT.Secret)
+
+				return jwtbytes, nil
+			},
+		},
+		"register": &graphql.Field{
+			Type:        userType,
+			Description: "Register a user",
+			Args: graphql.FieldConfigArgument{
+				"email": &graphql.ArgumentConfig{
+					Type: graphql.NewNonNull(graphql.String),
+				},
+				"username": &graphql.ArgumentConfig{
+					Type: graphql.NewNonNull(graphql.String),
+				},
+				"password": &graphql.ArgumentConfig{
+					Type: graphql.NewNonNull(graphql.String),
+				},
+			},
+			Resolve: SignUpResolver,
 		},
 	},
-	Resolve: func(params graphql.ResolveParams) (interface{}, error) {
-		id, ok := params.Args["id"].(int)
-		if ok {
-			user, _ := id, 0
-			return user, nil
-		}
-		return nil, nil
+})
+
+var rootQuery = graphql.NewObject(graphql.ObjectConfig{
+	Name: "RootQuery",
+	Fields: graphql.Fields{
+		"user": &graphql.Field{
+			Type:        userType,
+			Description: "Query user by id",
+			Args: graphql.FieldConfigArgument{
+				"id": &graphql.ArgumentConfig{
+					Type: graphql.Int,
+				},
+			},
+			Resolve: LoginResolver,
+		},
 	},
-}
-var ListField = &graphql.Field{
-	Type:        graphql.NewList(userType),
-	Description: "Get all items",
-	Resolve: func(params graphql.ResolveParams) (interface{}, error) {
-		return nil, nil
-	},
-}
+})
 
-var fields = graphql.Fields{
-	"user": UserField,
-	"list": ListField,
-}
+var MySchema, _ = graphql.NewSchema(graphql.SchemaConfig{
+	Query:    rootQuery,
+	Mutation: rootMutation,
+})
 
-var rootQuery = graphql.ObjectConfig{Name: "RootQuery", Fields: fields}
-var schemaConfig = graphql.SchemaConfig{Query: graphql.NewObject(rootQuery)}
+func GraphQLHandler(w http.ResponseWriter, r *http.Request) {
 
-func (app *Application) GraphQLHandler(w http.ResponseWriter, r *http.Request) {
-	//user, _ = app.Models.DB.GetUser(1)
-
-	// Get the query from the request body
-	// q, _ := io.ReadAll(r.Body)
-	// query := string(q)
-
-	query := `{ user(id: 1) { id, email, username, password, usergroups } }`
-
-	schema, err := graphql.NewSchema(schemaConfig)
-
-	if err != nil {
-		ErrorJSON(w, errors.New("invalid schema"))
-		app.Logger.Println(err)
-	}
-
-	params := graphql.Params{Schema: schema, RequestString: query}
+	q, _ := io.ReadAll(r.Body)
+	MyQuery := string(q)
+	params := graphql.Params{Schema: MySchema, RequestString: MyQuery}
 	resp := graphql.Do(params)
 
 	if len(resp.Errors) > 0 {
-		ErrorJSON(w, errors.New("invalid query"))
-		app.Logger.Printf("Failed: %+v", resp.Errors)
+		fmt.Printf("wrong result, unexpected errors: %v", resp.Errors)
 	}
 
-	data, _ := json.MarshalIndent(resp, "", "  ")
-	WriteJSON(w, http.StatusOK, data, "response")
+	rJSON, _ := json.MarshalIndent(resp, "", "  ")
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(rJSON)
+
+	// result := graphql.Do(graphql.Params{
+	// 	Schema:        MySchema,
+	// 	RequestString: MyQuery,
+	// })
+	// if len(result.Errors) > 0 {
+	// 	utils.ErrorJSON(w, result.Errors[0])
+	// 	return
+	// }
+	// fmt.Print(result)
+	// json.NewEncoder(w).Encode(result)
+
+	// data, _ := json.MarshalIndent(resp, "", "  ")
+	// utils.WriteJSON(w, http.StatusOK, data, "response")
 }
