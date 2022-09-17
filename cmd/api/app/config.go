@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 )
 
 type Config struct {
@@ -74,6 +75,7 @@ func NewDefaultConfig() *Config {
 }
 
 func OpenDB(cfg *Config) (*sql.DB, error) {
+
 	db, err := sql.Open("postgres", cfg.Db.Dsn)
 	if err != nil {
 		return nil, err

@@ -31,11 +31,13 @@ func (app *Application) Routes() http.Handler {
 	h := handler.New(&handler.Config{
 		Schema:   &MySchema,
 		Pretty:   true,
-		GraphiQL: false,
+		GraphiQL: true,
 	})
 
-	// GraphQL route
+	//GraphQL route
 	router.Handler(http.MethodPost, "/graphql", h)
+	router.Handler(http.MethodGet, "/graphql", h)
+
 	//router.HandlerFunc(http.MethodPost, "/graphql", GraphQLHandler)
 	return app.EnableCORS(router)
 }

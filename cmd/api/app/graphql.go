@@ -1,22 +1,11 @@
 package app
 
 import (
-	"encoding/json"
-	"errors"
-	"fmt"
-	"go-server/cmd/api/auth"
-	"go-server/cmd/models"
-	"io"
-	"log"
-	"net/http"
-
 	"github.com/graphql-go/graphql"
-	"golang.org/x/crypto/bcrypt"
 )
 
-var cfg = NewDefaultConfig()
+var cfg = GetAppConfig()
 var db, _ = OpenDB(cfg)
-var m = models.NewModels(db)
 
 // Define our data types to be used in the GraphQL schema
 var userType = graphql.NewObject(graphql.ObjectConfig{
@@ -34,63 +23,35 @@ var userType = graphql.NewObject(graphql.ObjectConfig{
 		"password": &graphql.Field{
 			Type: graphql.String,
 		},
-		/* 		"usergroups": &graphql.Field{
-			Type: graphql.NewList(graphql.Int),
-		}, */
-	}})
-
-var loginType = graphql.NewObject(graphql.ObjectConfig{
-	Name: "login",
-	Fields: graphql.Fields{
-		"email": &graphql.Field{
-			Type: graphql.String,
-		},
-		"password": &graphql.Field{
-			Type: graphql.String,
-		},
 	}})
 
 // root mutation
-var rootMutation = graphql.NewObject(graphql.ObjectConfig{
+var _rootMutation = graphql.NewObject(graphql.ObjectConfig{
 	Name: "Mutation",
 	Fields: graphql.Fields{
 		"login": &graphql.Field{
-			Type: userType,
-			Args: graphql.FieldConfigArgument{
-				"email": &graphql.ArgumentConfig{
-					Type: graphql.String,
-				},
-				"password": &graphql.ArgumentConfig{
-					Type: graphql.String,
-				},
-			},
-			Resolve: func(params graphql.ResolveParams) (interface{}, error) {
-				//defer db.Close()
-				// print the params
-				log.Println("found a password", params.Args["password"])
-				var cred Credentials
-				cred.Password, _ = params.Args["password"].(string)
-				cred.Email, _ = params.Args["email"].(string)
-
-				user, _ := m.DB.GetUserByUsername(cred.Email)
-				err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(cred.Password))
-
-				if err != nil {
-					return nil, errors.New("invalid username or password")
-				}
-				jwtbytes, _ := auth.TokenGen(user, cfg.JWT.Secret)
-
-				return jwtbytes, nil
-			},
-		},
-		"register": &graphql.Field{
-			Type:        userType,
-			Description: "Register a user",
+			Type: graphql.String,
 			Args: graphql.FieldConfigArgument{
 				"email": &graphql.ArgumentConfig{
 					Type: graphql.NewNonNull(graphql.String),
 				},
-				"username": &graphql.ArgumentConfig{
+				"password": &graphql.ArgumentConfig{
+					Type: graphql.NewNonNull(graphql.String),
+				},
+			},
+			Resolve: LoginResolver,
+		},
+		"singup": &graphql.Field{
+			Type:        graphql.String,
+			Description: "Register a user",
+			Args: graphql.FieldConfigArgument{
+				"name": &graphql.ArgumentConfig{
+					Type: graphql.NewNonNull(graphql.String),
+				},
+				"email": &graphql.ArgumentConfig{
+					Type: graphql.NewNonNull(graphql.String),
+				},
+				"phone": &graphql.ArgumentConfig{
 					Type: graphql.NewNonNull(graphql.String),
 				},
 				"password": &graphql.ArgumentConfig{
@@ -102,7 +63,7 @@ var rootMutation = graphql.NewObject(graphql.ObjectConfig{
 	},
 })
 
-var rootQuery = graphql.NewObject(graphql.ObjectConfig{
+var _rootQuery = graphql.NewObject(graphql.ObjectConfig{
 	Name: "RootQuery",
 	Fields: graphql.Fields{
 		"user": &graphql.Field{
@@ -119,36 +80,6 @@ var rootQuery = graphql.NewObject(graphql.ObjectConfig{
 })
 
 var MySchema, _ = graphql.NewSchema(graphql.SchemaConfig{
-	Query:    rootQuery,
-	Mutation: rootMutation,
+	Query:    _rootQuery,
+	Mutation: _rootMutation,
 })
-
-func GraphQLHandler(w http.ResponseWriter, r *http.Request) {
-
-	q, _ := io.ReadAll(r.Body)
-	MyQuery := string(q)
-	params := graphql.Params{Schema: MySchema, RequestString: MyQuery}
-	resp := graphql.Do(params)
-
-	if len(resp.Errors) > 0 {
-		fmt.Printf("wrong result, unexpected errors: %v", resp.Errors)
-	}
-
-	rJSON, _ := json.MarshalIndent(resp, "", "  ")
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(rJSON)
-
-	// result := graphql.Do(graphql.Params{
-	// 	Schema:        MySchema,
-	// 	RequestString: MyQuery,
-	// })
-	// if len(result.Errors) > 0 {
-	// 	utils.ErrorJSON(w, result.Errors[0])
-	// 	return
-	// }
-	// fmt.Print(result)
-	// json.NewEncoder(w).Encode(result)
-
-	// data, _ := json.MarshalIndent(resp, "", "  ")
-	// utils.WriteJSON(w, http.StatusOK, data, "response")
-}

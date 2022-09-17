@@ -23,10 +23,11 @@ func NewModels(db *sql.DB) Models {
 
 // User is the type for users
 type User struct {
-	ID         int       `json:"id"`
+	ID         string    `json:"id"`
 	Email      string    `json:"email"`
 	Username   string    `json:"username"`
 	Password   string    `json:"password"`
+	Phone      string    `json:"phone"`
 	CreatedAt  time.Time `json:"created"`
 	UpdatedAt  time.Time `json:"-"`
 	UserGroups []int     `json:"groups"`

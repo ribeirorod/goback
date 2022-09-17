@@ -2,25 +2,39 @@ package models
 
 import (
 	"context"
+	"fmt"
 	"time"
 )
 
 func (m *DBModel) GetUserByUsername(email string) (*User, error) {
-	var user User
-
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
 	// Query user from DB
+	query := `select id, email, username, password from public.accounts where email = $1`
 
-	row := m.DB.QueryRowContext(context.Background(), "SELECT id, email, username, password FROM accounts WHERE email = $1", email)
-	err := row.Scan(&user.ID, &user.Email, &user.Username, &user.Password)
+	row := m.DB.QueryRowContext(ctx, query, email)
+
+	var user User
+	err := row.Scan(
+		&user.ID,
+		&user.Email,
+		&user.Username,
+		&user.Password,
+	)
+
+	fmt.Println("We go email ", user.Email)
+
 	if err != nil {
-		return &user, err
+		return nil, err
 	}
+
+	// get user groups, if any
 
 	return &user, nil
 }
 
 // Get returns one user and error, if any
-func (m *DBModel) GetUser(id int) (*User, error) {
+func (m *DBModel) GetUser(id string) (*User, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
@@ -64,9 +78,19 @@ func (m *DBModel) InsertUser(u *User) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	query := `insert into public.accounts (email, username, password, created_at, updated_at) values ($1, $2, $3, $4, $5)`
+	query := `insert into public.accounts 
+		(email, username, phone, password, created_at, updated_at) 
+		values ($1, $2, $3, $4, $5)`
 
-	_, err := m.DB.ExecContext(ctx, query, u.Email, u.Username, u.Password, time.Now(), time.Now())
+	_, err := m.DB.ExecContext(ctx,
+		query,
+		u.Email,
+		u.Username,
+		u.Phone,
+		u.Password,
+		time.Now(),
+		time.Now())
+
 	if err != nil {
 		return err
 	}

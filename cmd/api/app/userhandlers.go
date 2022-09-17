@@ -7,7 +7,6 @@ import (
 	"go-server/cmd/api/utils"
 	"go-server/cmd/models"
 	"net/http"
-	"strconv"
 
 	"github.com/julienschmidt/httprouter"
 	"golang.org/x/crypto/bcrypt"
@@ -51,10 +50,6 @@ func (app *Application) AddUser(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// func (app *Application) delUser(w http.ResponseWriter, r *http.Request) {
-
-// }
-
 func (app *Application) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	var user models.User
 
@@ -70,7 +65,7 @@ func (app *Application) UpdateUser(w http.ResponseWriter, r *http.Request) {
 func (app *Application) GetOneUser(w http.ResponseWriter, r *http.Request) {
 
 	params := httprouter.ParamsFromContext(r.Context())
-	id, err := strconv.Atoi(params.ByName("id"))
+	id := params.ByName("id")
 	//password := params.ByName("password")
 
 	if err != nil {
@@ -78,7 +73,7 @@ func (app *Application) GetOneUser(w http.ResponseWriter, r *http.Request) {
 		utils.ErrorJSON(w, err)
 		return
 	}
-	app.Logger.Printf("User ID: %d", id)
+	app.Logger.Printf("User ID: %s", id)
 
 	user, err := app.Models.DB.GetUser(id)
 	if err != nil {

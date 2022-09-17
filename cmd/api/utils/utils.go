@@ -7,6 +7,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+
+	guuid "github.com/google/uuid"
 )
 
 func WriteJSON(w http.ResponseWriter, status int, data interface{}, wrap string) error {
@@ -72,5 +74,13 @@ func TellASecret() {
 	// sha := hex.EncodeToString(h.Sum(nil))
 
 	// append result to the existing .env file
+
+}
+
+func GenerateGUID() string {
+	// Function to generate a random GUID.
+
+	id := guuid.New()
+	return id.String()
 
 }
