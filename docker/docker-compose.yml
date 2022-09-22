@@ -1,0 +1,51 @@
+version: '2'
+services:
+
+  frontend:
+      image: react-app
+      networks:
+        - host
+      ports:
+          - "3000:3000"
+      volumes:
+          - ./frontend:/app
+      depends_on:
+          - backend
+      command: npm start
+      cpus: 0.4
+      mem_limit: 500m
+      mem_reservation: 500m
+      restart: always
+
+  nodejs:
+      image: node:12
+      volumes:
+          - ./backend:/app
+      working_dir: /app
+      command: npm start
+
+  backend-go:
+      image: golang:1.14
+      volumes:
+          - ./backend-go:/app
+      working_dir: /app
+      command: go run main.go
+      depends_on:
+        - postgres
+
+  mongodb:
+      image: mongo
+      ports:
+          - "27017:27017"
+      volumes:
+          - ./data:/data/db
+
+  postgres:
+      image: postgres
+      ports:
+          - "5432:5432"
+      environment:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+      volumes:
+          - ./postgres:/var/lib/postgresql/data
