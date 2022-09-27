@@ -1,9 +1,6 @@
-package app
+package config
 
 import (
-	"database/sql"
-	"go-server/cmd/models"
-	"log"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -25,12 +22,6 @@ type AppStatus struct {
 	Status  string `json:"status"`
 	Env     string `json:"environment"`
 	Version string `json:"version"`
-}
-
-type Application struct {
-	Config *Config
-	Logger *log.Logger
-	Models models.Models
 }
 
 // check for config on .env and assign default value if none
@@ -64,7 +55,7 @@ func NewDefaultConfig() *Config {
 		Db: struct {
 			Dsn string
 		}{
-			Dsn: "localhost",
+			Dsn: "postgres://react:q1w2e3r4@localhost:5432/model_frontend?sslmode=disable",
 		},
 		JWT: struct {
 			Secret string
@@ -72,19 +63,4 @@ func NewDefaultConfig() *Config {
 			Secret: "secret",
 		},
 	}
-}
-
-func OpenDB(cfg *Config) (*sql.DB, error) {
-
-	db, err := sql.Open("postgres", cfg.Db.Dsn)
-	if err != nil {
-		return nil, err
-	}
-
-	// PING Verifies that the database connection is still alive.
-	if err := db.Ping(); err != nil {
-		return nil, err
-	}
-
-	return db, nil
 }

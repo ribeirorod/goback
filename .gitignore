@@ -17,4 +17,9 @@
 .gitignore
 /source
 /sp-api
+/data
 bin
+
+*launch.json*
+
+/_old_app/*

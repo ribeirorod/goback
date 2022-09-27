@@ -2,13 +2,22 @@ package app
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 
+	"go-server/cmd/api/config"
+	"go-server/cmd/models"
 	"go-server/internal"
 )
 
+type Application struct {
+	Config *config.Config
+	Logger *log.Logger
+	Models models.Models
+}
+
 func (app *Application) StatusHandler(w http.ResponseWriter, r *http.Request) {
-	currentStatus := AppStatus{
+	currentStatus := config.AppStatus{
 		Status:  "Available",
 		Env:     app.Config.Env,
 		Version: internal.Version,
