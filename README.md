@@ -21,7 +21,7 @@ $ make build
 * `DONE` Instantiate a DB connection
 * `DONE` Model User
 * `DONE` DB permissions
-* *TODO* Model Groups
+* `DONE` Model Groups
 * `DONE` Query User from DB
 * *TODO* CRUD DB Operations
 * `DONE` Middlewares? CORS?
@@ -34,10 +34,10 @@ $ make build
 * A more elegant way to enable a new DB connection from anywhere
 
 ### Part II
-* *TODO* Implement [GraphQl](https://github.com/graphql-go/graphql)
-* *TODO* Link to FEend
-* *TODO* Authenticate a request
-* *TODO* LogIn | Out
+* `DONE` Implement [GraphQl](https://github.com/graphql-go/graphql)
+* `DONE` Link to FEend
+* `DONE` Authenticate a request
+* `DONE` LogIn | Out | Signup
 * *TODO* Protect Routes
 
 * *TODO* Template other DB connectors (BQ, SF)
