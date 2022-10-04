@@ -29,7 +29,7 @@ func (app *Application) Signin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jwtbytes, _ := auth.TokenGen(user, app.Config.JWT.Secret)
+	jwtbytes := auth.TokenGen(user, app.Config.JWT.Secret)
 	utils.WriteJSON(w, http.StatusOK, jwtbytes, "response")
 
 }

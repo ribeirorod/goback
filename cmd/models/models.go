@@ -35,16 +35,17 @@ type User struct {
 	Username  string    `json:"name"`
 	Password  string    `json:"password"`
 	Phone     string    `json:"phone"`
+	Groups    []Group   `json:"groups omitempty" gorm:"many2many:group_accounts;"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
 // Group is the type for user groups
-type UserGroup struct {
-	ID        int       `json:"gid"`
-	GroupName string    `json:"-"`
-	CreatedAt time.Time `json:"-"`
-	UpdatedAt time.Time `json:"-"`
+type Group struct {
+	ID          string    `json:"gid"`
+	Description string    `json:"-"`
+	CreatedAt   time.Time `json:"-"`
+	UpdatedAt   time.Time `json:"-"`
 }
 
 type Tabler interface {
@@ -57,6 +58,11 @@ func (User) TableName() string {
 }
 
 func (u *User) BeforeCreate(tx *gorm.DB) error {
+	u.ID = guuid.New().String()
+	return nil
+}
+
+func (u *Group) BeforeCreate(tx *gorm.DB) error {
 	u.ID = guuid.New().String()
 	return nil
 }

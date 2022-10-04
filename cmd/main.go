@@ -9,6 +9,7 @@ import (
 	"go-server/cmd/api/app"
 	"go-server/cmd/api/config"
 	"go-server/cmd/api/database"
+	"go-server/cmd/api/utils"
 	"go-server/cmd/models"
 
 	_ "github.com/lib/pq"
@@ -20,6 +21,11 @@ func main() {
 	sqlDB, _ := database.DBCon.DB.DB()
 
 	defer sqlDB.Close()
+
+	// test email
+	utils.SendPasswordRecoveryEmail(&models.User{ID: "2",
+		Username: "RodTest",
+		Email:    "eurodribeiro@gmail.com"})
 
 	// Create a logger ; log to stdouts
 	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
@@ -47,4 +53,5 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 }

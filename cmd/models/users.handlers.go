@@ -11,11 +11,9 @@ import (
 func (m *DBModel) GetUserByID(id string) (*User, error) {
 	var user User
 
-	result := m.DB.Model(&user).First(&user, id)
-	if result.Error != nil {
+	if result := m.DB.Model(&user).First(&user, id); result.Error != nil {
 		return nil, result.Error
 	}
-
 	return &user, nil
 }
 

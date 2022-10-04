@@ -26,4 +26,11 @@ func InitDB() {
 		log.Fatal("failed to connect database")
 
 	}
+
+	Migrate(DBCon.DB)
+}
+
+func Migrate(db *gorm.DB) {
+	db.AutoMigrate(&models.User{}, &models.Group{})
+
 }

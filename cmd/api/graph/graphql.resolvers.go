@@ -38,7 +38,7 @@ func LoginResolver(params graphql.ResolveParams) (interface{}, error) {
 		return "password_invalid", nil
 	}
 
-	jwtbytes, _ := auth.TokenGen(user, cfg.JWT.Secret)
+	jwtbytes := auth.TokenGen(user, cfg.JWT.Secret)
 	return jwtbytes, nil
 }
 

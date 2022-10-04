@@ -9,7 +9,7 @@ import (
 	"github.com/pascaldekloe/jwt"
 )
 
-func TokenGen(u *models.User, secret string) ([]byte, error) {
+func TokenGen(u *models.User, secret string) []byte {
 	var claims jwt.Claims
 	claims.Subject = u.ID
 	claims.Issuer = "go-server"
@@ -24,5 +24,5 @@ func TokenGen(u *models.User, secret string) ([]byte, error) {
 		log.Fatal(err)
 	}
 
-	return authToken, nil
+	return authToken
 }
