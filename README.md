@@ -23,7 +23,7 @@ $ make build
 - [x] DB permissions
 - [x] Model Groups
 - [x] Query User from DB
-- [] CRUD DB Operations
+- [ ] CRUD DB Operations
 - [x] Middlewares? CORS?
 - [x] Generate TOKEN
 - [x] Routes via REST
@@ -37,9 +37,9 @@ $ make build
 - [x]  Implement [GraphQl](https://github.com/graphql-go/graphql)
 - [x]  Link to FEend
 - [x]  LogIn | Out | Signup
-- []  Authenticate a request
-- []  Session Management
-- [] Protect Routes
+- [ ]  Authenticate a request
+- [ ]  Session Management
+- [ ] Protect Routes
 
 
 * *TODO* Template other DB connectors (BQ, SF)
