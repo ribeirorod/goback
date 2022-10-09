@@ -1,8 +1,14 @@
 package graph
 
 import (
+	"go-server/cmd/api/config"
+	"go-server/cmd/api/database"
+
 	g "github.com/graphql-go/graphql"
 )
+
+var db = database.DBCon
+var cfg = config.GetAppConfig()
 
 var UserInputType = g.NewInputObject(g.InputObjectConfig{
 	Name: "userInput",
@@ -43,7 +49,6 @@ var userType = g.NewObject(g.ObjectConfig{
 		},
 	}})
 
-// root mutation
 var _rootMutation = g.NewObject(g.ObjectConfig{
 	Name: "Mutation",
 	Fields: g.Fields{
@@ -59,6 +64,15 @@ var _rootMutation = g.NewObject(g.ObjectConfig{
 			},
 			Resolve: LoginResolver,
 		},
+		"logout": &g.Field{
+			Type: g.String,
+			Args: g.FieldConfigArgument{
+				"authToken": &g.ArgumentConfig{
+					Type: g.NewNonNull(g.String),
+				},
+			},
+			Resolve: LogoutResolver,
+		},
 		"signup": &g.Field{
 			Type:        g.String,
 			Description: "Register a user",
@@ -68,6 +82,35 @@ var _rootMutation = g.NewObject(g.ObjectConfig{
 				},
 			},
 			Resolve: SignUpResolver,
+		},
+		"updateUser": &g.Field{
+			Type:        g.String,
+			Description: "Register a user",
+			Args: g.FieldConfigArgument{
+				"userInput": &g.ArgumentConfig{
+					Type: g.NewNonNull(UserInputType),
+				},
+				"token": &g.ArgumentConfig{
+					Type: g.NewNonNull(g.String),
+				},
+			},
+			Resolve: UpdateUserResolver,
+		},
+		"sendToken": &g.Field{
+			Type:        g.String,
+			Description: "Register a user",
+			Args: g.FieldConfigArgument{
+				"email": &g.ArgumentConfig{
+					Type: g.NewNonNull(g.String),
+				},
+				"type": &g.ArgumentConfig{
+					Type: g.NewNonNull(g.String),
+				},
+				"method": &g.ArgumentConfig{
+					Type: g.NewNonNull(g.String),
+				},
+			},
+			Resolve: UpdateUserResolver,
 		},
 	},
 })

@@ -5,42 +5,11 @@ import (
 	"errors"
 	"log"
 
-	"go-server/cmd/api/auth"
-	"go-server/cmd/api/config"
-	"go-server/cmd/api/database"
 	"go-server/cmd/models"
 
 	"github.com/graphql-go/graphql"
 	"golang.org/x/crypto/bcrypt"
 )
-
-var db = database.DBCon
-var cfg = config.GetAppConfig()
-var cred models.Credentials
-
-func LoginResolver(params graphql.ResolveParams) (interface{}, error) {
-
-	sqlDB, _ := db.DB.DB() // *sql.DB
-	defer sqlDB.Close()
-
-	cred.Password, _ = params.Args["password"].(string)
-	cred.Email, _ = params.Args["email"].(string)
-
-	user, _ := db.GetUserByEmail(cred.Email)
-
-	if user == nil {
-		return "invalid_user", nil
-	}
-
-	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(cred.Password))
-
-	if err != nil {
-		return "password_invalid", nil
-	}
-
-	jwtbytes := auth.TokenGen(user, cfg.JWT.Secret)
-	return jwtbytes, nil
-}
 
 func SignUpResolver(params graphql.ResolveParams) (interface{}, error) {
 	var user *models.User

@@ -2,7 +2,7 @@ package app
 
 import (
 	"go-server/cmd/api/graph"
-	"go-server/cmd/api/handlers"
+	"go-server/cmd/api/middlewares"
 	"net/http"
 
 	"github.com/graphql-go/handler"
@@ -16,19 +16,9 @@ func (app *Application) Routes() http.Handler {
 		w.Write([]byte("Welcome to the Let'sGO-Server API"))
 	})
 
-	// Signin route relies on jwt middleware
-	/* 	router.HandlerFunc(http.MethodGet, "/v1/signin", app.Signin)
-
-	   	router.HandlerFunc(http.MethodGet, "/status", app.StatusHandler)
-
-	   	// Get a single user.
-	   	router.HandlerFunc(http.MethodGet, "/v1/user/:id", app.GetOneUser)
-
-	   	// Edit update a single user.
-	   	router.HandlerFunc(http.MethodGet, "/v1/edit/:id", app.UpdateUser)
-
-	   	// Add a new user. */
-	/* 	router.HandlerFunc(http.MethodPost, "/v1/user/add", app.AddUser) */
+	router.HandlerFunc(http.MethodGet, "/status", app.StatusHandler)
+	// Get a single user.
+	router.HandlerFunc(http.MethodGet, "/v1/user/:id", app.GetOneUser)
 
 	h := handler.New(&handler.Config{
 		Schema:   &graph.MySchema,
@@ -41,5 +31,5 @@ func (app *Application) Routes() http.Handler {
 	router.Handler(http.MethodGet, "/graphql", h)
 
 	//router.HandlerFunc(http.MethodPost, "/graphql", GraphQLHandler)
-	return handlers.EnableCORS(router)
+	return middlewares.Chain(router, middlewares.ShareMdware)
 }

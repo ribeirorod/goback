@@ -35,7 +35,8 @@ type User struct {
 	Username  string    `json:"name"`
 	Password  string    `json:"password"`
 	Phone     string    `json:"phone"`
-	Groups    []Group   `json:"groups omitempty" gorm:"many2many:group_accounts;"`
+	Groups    []Group   `json:"groups omitempty" gorm:"many2many:group_accounts"`
+	Token     string    `json:"token"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
