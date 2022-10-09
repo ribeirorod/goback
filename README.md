@@ -15,18 +15,18 @@ $ make build
 
 
 ### Part I
-* `DONE` POC server listening on Port 8080 and running
-* `DONE` Serve request, write json to the browser
-* `DONE` DB Connection (PostGres)
-* `DONE` Instantiate a DB connection
-* `DONE` Model User
-* `DONE` DB permissions
-* `DONE` Model Groups
-* `DONE` Query User from DB
-* *TODO* CRUD DB Operations
-* `DONE` Middlewares? CORS?
-* `DONE` Generate TOKEN
-* `DONE` Routes via REST
+- [x] POC server listening on Port 8080 and running
+- [x] Serve request, write json to the browser
+- [x] DB Connection (PostGres)
+- [x] Instantiate a DB connection
+- [x] Model User
+- [x] DB permissions
+- [x] Model Groups
+- [x] Query User from DB
+- [] CRUD DB Operations
+- [x] Middlewares? CORS?
+- [x] Generate TOKEN
+- [x] Routes via REST
 
 ### Before moving forward
 * Reassess the current project structure
@@ -34,11 +34,13 @@ $ make build
 * A more elegant way to enable a new DB connection from anywhere
 
 ### Part II
-* `DONE` Implement [GraphQl](https://github.com/graphql-go/graphql)
-* `DONE` Link to FEend
-* `DONE` Authenticate a request
-* `DONE` LogIn | Out | Signup
-* *TODO* Protect Routes
+- [x]  Implement [GraphQl](https://github.com/graphql-go/graphql)
+- [x]  Link to FEend
+- [x]  LogIn | Out | Signup
+- []  Authenticate a request
+- []  Session Management
+- [] Protect Routes
+
 
 * *TODO* Template other DB connectors (BQ, SF)
 
