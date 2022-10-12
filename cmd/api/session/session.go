@@ -17,6 +17,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"sync"
@@ -46,11 +47,11 @@ type Session interface {
 	SessionID() string                // back current sessionID
 }
 
-var provides = make(map[string]Provider)
+var providers = make(map[string]Provider)
 
 // NewManager init session manager
 func NewManager(provideName, cookieName string, maxlifetime int64) (*Manager, error) {
-	provider, ok := provides[provideName]
+	provider, ok := providers[provideName]
 	if !ok {
 		return nil, fmt.Errorf("session: unknown provide %q (forgotten import?)", provideName)
 	}
@@ -59,14 +60,14 @@ func NewManager(provideName, cookieName string, maxlifetime int64) (*Manager, er
 
 // Register makes a session provide available by the provided name.
 // If Register is called twice with the same name or if driver is nil, it panics
-func Register(name string, provider Provider) {
+func RegisterNewProvider(name string, provider Provider) {
 	if provider == nil {
 		panic("session: Register provide is nil")
 	}
-	if _, dup := provides[name]; dup {
+	if _, dup := providers[name]; dup {
 		panic("session: Register called twice for provide " + name)
 	}
-	provides[name] = provider
+	providers[name] = provider
 }
 
 // Session ID
@@ -117,7 +118,18 @@ func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (se
 	if err != nil || cookie.Value == "" {
 		sid := manager.SessionID()
 		session, _ = manager.SessionInit(sid)
-		cookie := http.Cookie{Name: manager.cookieName, Value: url.QueryEscape(sid), Path: "/", HttpOnly: true, MaxAge: int(manager.maxlifetime)}
+		cookie := http.Cookie{
+			Name:     manager.cookieName,
+			Value:    url.QueryEscape(sid),
+			Path:     "/",
+			HttpOnly: true,
+			Secure:   true,
+			SameSite: http.SameSiteNoneMode,
+			MaxAge:   int(manager.maxlifetime)}
+
+		if err = cookie.Valid(); err != nil {
+			log.Printf("Cookie is not valid: %v", err)
+		}
 		http.SetCookie(w, &cookie)
 
 	} else {

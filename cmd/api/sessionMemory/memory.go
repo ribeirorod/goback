@@ -7,13 +7,14 @@ import (
 	"time"
 )
 
-type Provider struct {
+// ProverMemory memory satifies session.Provider interface.
+type ProviderMemory struct {
 	lock     sync.Mutex               // lock
 	sessions map[string]*list.Element // save in memory
 	list     *list.List               // gc
 }
 
-func (pder *Provider) SessionInit(sid string) (session.Session, error) {
+func (pder *ProviderMemory) SessionInit(sid string) (session.Session, error) {
 	pder.lock.Lock()
 	defer pder.lock.Unlock()
 
@@ -27,7 +28,7 @@ func (pder *Provider) SessionInit(sid string) (session.Session, error) {
 	return newsess, nil
 }
 
-func (pder *Provider) SessionRead(sid string) (session.Session, error) {
+func (pder *ProviderMemory) SessionRead(sid string) (session.Session, error) {
 	if element, ok := pder.sessions[sid]; ok {
 		return element.Value.(*SessionStore), nil
 	} else {
@@ -36,7 +37,7 @@ func (pder *Provider) SessionRead(sid string) (session.Session, error) {
 	}
 }
 
-func (pder *Provider) SessionDestroy(sid string) error {
+func (pder *ProviderMemory) SessionDestroy(sid string) error {
 	if element, ok := pder.sessions[sid]; ok {
 		delete(pder.sessions, sid)
 		pder.list.Remove(element)
@@ -45,7 +46,7 @@ func (pder *Provider) SessionDestroy(sid string) error {
 	return nil
 }
 
-func (pder *Provider) SessionGC(maxlifetime int64) {
+func (pder *ProviderMemory) SessionGC(maxlifetime int64) {
 	pder.lock.Lock()
 	defer pder.lock.Unlock()
 
@@ -64,7 +65,7 @@ func (pder *Provider) SessionGC(maxlifetime int64) {
 	}
 }
 
-func (pder *Provider) SessionUpdate(sid string) error {
+func (pder *ProviderMemory) SessionUpdate(sid string) error {
 	pder.lock.Lock()
 	defer pder.lock.Unlock()
 	if element, ok := pder.sessions[sid]; ok {
@@ -75,6 +76,7 @@ func (pder *Provider) SessionUpdate(sid string) error {
 	return nil
 }
 
+// SessionStore satifies session.Session interface.
 type SessionStore struct {
 	sid          string                      // session id
 	timeAccessed time.Time                   // last access time
@@ -111,8 +113,8 @@ func (st *SessionStore) SessionID() string {
 }
 
 // SessionStore is a memory session store.
-var prvdr = &Provider{list: list.New()}
+var prvdr = &ProviderMemory{list: list.New()}
 
 func init() {
-	session.Register("memory", prvdr)
+	session.RegisterNewProvider("memory", prvdr)
 }

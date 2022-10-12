@@ -1,18 +1,18 @@
 package middlewares
 
 import (
-	_ "go-server/cmd/api/memory"
 	"go-server/cmd/api/session"
+	_ "go-server/cmd/api/sessionMemory" // import memory session executes init() function
+	"log"
 	"net/http"
-	"regexp"
 )
 
-var globalSessions *session.Manager
+var userSessions *session.Manager
 
 // initialize in init() function
 func init() {
-	globalSessions, _ = session.NewManager("memory", "sid", 3600)
-	go globalSessions.GC()
+	userSessions, _ = session.NewManager("memory", "user_session", 3600)
+	go userSessions.GC()
 }
 
 type Middleware func(http.Handler) http.Handler
@@ -37,11 +37,10 @@ var ShareMdware = []Middleware{
 
 func EnableCORS(n http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
 		w.Header().Set("Access-Control-Allow-Credentials", "true")
 		w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT")
-		w.Header().Set("Access-Control-Allow-Headers", "X-Requested-With,Content-Type, Authorization")
-		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+		w.Header().Set("Access-Control-Allow-Headers", "X-Requested-With,Content-Type,Authorization")
 
 		if r.Method == "OPTIONS" {
 			w.WriteHeader(http.StatusOK)
@@ -53,36 +52,13 @@ func EnableCORS(n http.Handler) http.Handler {
 
 func SessionMiddleware(n http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// get Cookies from request
-		//cookie := r.Header.Get("Cookie")
-		if cookie, nok := r.Cookie("sid"); nok == nil {
 
-			re, _ := regexp.Compile(`sid=([\d\w]+)[^ec;]`)
-			sid := re.FindStringSubmatch(cookie.Value)[1]
-			_, err := globalSessions.SessionInit(sid)
-
-			if err != nil {
-				panic(err)
-			}
-			defer globalSessions.SessionDestroy(sid)
-
-		} else {
-
-			// create session
-			session := globalSessions.SessionStart(w, r)
-			sid := session.SessionID()
-			// set cookie
-			cookie := &http.Cookie{
-				Name:     "sid",
-				Value:    sid,
-				HttpOnly: true,
-				SameSite: http.SameSiteNoneMode,
-				Path:     "/",
-				MaxAge:   3600}
-
-			http.SetCookie(w, cookie)
-		}
-
+		// Load session if exists or create new session
+		session := userSessions.SessionStart(w, r)
+		sid := session.SessionID()
+		log.Println("Starting session", session, sid)
+		// End User session
+		defer userSessions.SessionDestroy(sid)
 		n.ServeHTTP(w, r)
 
 	})
