@@ -49,6 +49,68 @@ var userType = g.NewObject(g.ObjectConfig{
 		},
 	}})
 
+var itemType = g.NewObject(g.ObjectConfig{
+	Name: "Item",
+	Fields: g.Fields{
+		"_id": &g.Field{
+			Type: g.String,
+		},
+		"name": &g.Field{
+			Type: g.String,
+		},
+		"description": &g.Field{
+			Type: g.String,
+		},
+		"rate": &g.Field{
+			Type: g.Float,
+		},
+		"quantity": &g.Field{
+			Type: g.Int,
+		},
+	}})
+
+var voucherType = g.NewObject(g.ObjectConfig{
+	Name: "Voucher",
+	Fields: g.Fields{
+		"name": &g.Field{
+			Type: g.String,
+		},
+		"isValid": &g.Field{
+			Type: g.Boolean,
+		},
+		"discount": &g.Field{
+			Type: g.Float,
+		},
+	}})
+
+var CartType = g.NewObject(g.ObjectConfig{
+	Name: "cart",
+	Fields: g.Fields{
+		"items": &g.Field{
+			Type: g.NewList(itemType),
+		},
+		"voucher": &g.Field{
+			Type: voucherType,
+		},
+		"subtotal": &g.Field{
+			Type: g.Float,
+		},
+		"discount": &g.Field{
+			Type: g.Float,
+		},
+		"total": &g.Field{
+			Type: g.Float,
+		},
+	}})
+
+var sessionType = g.NewObject(g.ObjectConfig{
+	Name: "Session",
+	Fields: g.Fields{
+		"cart": &g.Field{
+			Type: CartType,
+		},
+	}})
+
 var _rootMutation = g.NewObject(g.ObjectConfig{
 	Name: "Mutation",
 	Fields: g.Fields{
@@ -112,6 +174,16 @@ var _rootMutation = g.NewObject(g.ObjectConfig{
 			},
 			Resolve: UpdateUserResolver,
 		},
+		"initSession": &g.Field{
+			Type:        g.String,
+			Description: "Register a user",
+			Args: g.FieldConfigArgument{
+				"sid": &g.ArgumentConfig{
+					Type: g.String,
+				},
+			},
+			Resolve: SessionResolver,
+		},
 	},
 })
 
@@ -127,6 +199,16 @@ var _rootQuery = g.NewObject(g.ObjectConfig{
 				},
 			},
 			Resolve: LoginResolver,
+		},
+		"loadSession": &g.Field{
+			Type:        sessionType,
+			Description: "Load existing session by SID",
+			Args: g.FieldConfigArgument{
+				"sid": &g.ArgumentConfig{
+					Type: g.String,
+				},
+			},
+			Resolve: SessionResolver,
 		},
 	},
 })

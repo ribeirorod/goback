@@ -48,17 +48,12 @@ func LogoutResolver(params graphql.ResolveParams) (interface{}, error) {
 
 // Validate password
 func ValidatePassword(password string) bool {
-	// Check if password is empty
-	if len(password) == 0 {
-		return false
-	}
-
-	// Check if password is less than 8 characters
+	// Check if password is empty or less than 8 characters
 	if len(password) < 8 {
 		return false
 	}
 
-	// Check if password contains a number
+	// Check if password contains at least one number
 	if !strings.ContainsAny(password, "0123456789") {
 		return false
 	}

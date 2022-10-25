@@ -1,8 +1,8 @@
-package memory
+package session
 
 import (
 	"container/list"
-	"go-server/cmd/api/session"
+
 	"sync"
 	"time"
 )
@@ -14,21 +14,21 @@ type ProviderMemory struct {
 	list     *list.List               // gc
 }
 
-func (pder *ProviderMemory) SessionInit(sid string) (session.Session, error) {
-	pder.lock.Lock()
-	defer pder.lock.Unlock()
+func (pvdr *ProviderMemory) SessionInit(sid string) (Session, error) {
+	pvdr.lock.Lock()
+	defer pvdr.lock.Unlock()
 
-	if pder.sessions == nil {
-		pder.sessions = make(map[string]*list.Element, 0)
+	if pvdr.sessions == nil {
+		pvdr.sessions = make(map[string]*list.Element, 0)
 	}
 	v := make(map[interface{}]interface{}, 0)
 	newsess := &SessionStore{sid: sid, timeAccessed: time.Now(), value: v}
-	element := pder.list.PushBack(newsess)
-	pder.sessions[sid] = element
+	element := pvdr.list.PushBack(newsess)
+	pvdr.sessions[sid] = element
 	return newsess, nil
 }
 
-func (pder *ProviderMemory) SessionRead(sid string) (session.Session, error) {
+func (pder *ProviderMemory) SessionRead(sid string) (Session, error) {
 	if element, ok := pder.sessions[sid]; ok {
 		return element.Value.(*SessionStore), nil
 	} else {
@@ -46,6 +46,7 @@ func (pder *ProviderMemory) SessionDestroy(sid string) error {
 	return nil
 }
 
+// Session Garbage Collection - Expired Session
 func (pder *ProviderMemory) SessionGC(maxlifetime int64) {
 	pder.lock.Lock()
 	defer pder.lock.Unlock()
@@ -65,6 +66,7 @@ func (pder *ProviderMemory) SessionGC(maxlifetime int64) {
 	}
 }
 
+// Extends session life time.
 func (pder *ProviderMemory) SessionUpdate(sid string) error {
 	pder.lock.Lock()
 	defer pder.lock.Unlock()
@@ -116,5 +118,5 @@ func (st *SessionStore) SessionID() string {
 var prvdr = &ProviderMemory{list: list.New()}
 
 func init() {
-	session.RegisterNewProvider("memory", prvdr)
+	RegisterNewProvider("memory", prvdr)
 }

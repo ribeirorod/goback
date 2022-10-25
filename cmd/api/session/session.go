@@ -1,11 +1,12 @@
 package session
 
-// 1. Create a Unique Session ID
-// 2. Open Data Storage Space for Session : Memory or DB
-// 3. Send a Unique session ID to the client
-// Either use the response line, header or body to accomplish this
+// OK 1. Create a Unique Session ID
+// OK 2. Open Data Storage Space for Session : Memory
+// TODO Save Session in Database
+// OK 3. Send a Unique session ID to the client
+// TODO Extend the session expiration time when the user performs an operation
 
-// Deal with expired sessions
+// Deal with expired sessions - GCollector
 
 // Cookies: the server can easily use Set-cookie inside of a response header to send a session id to a client,
 // and a client can then use this cookie for future requests;
@@ -24,8 +25,8 @@ import (
 	"time"
 )
 
-// Session Management
-
+// Session Management allows to store mutiple sessions for the same user
+// Use the Manager cookieName to distinguish between different sessions
 type Manager struct {
 	cookieName  string     // private cookiename
 	lock        sync.Mutex // protects session
@@ -40,6 +41,7 @@ type Provider interface {
 	SessionGC(maxlifetime int64)
 }
 
+// Implicit interface for the SessionStore Type
 type Session interface {
 	Set(key, value interface{}) error // set session value
 	Get(key interface{}) interface{}  // get session value
@@ -59,7 +61,6 @@ func NewManager(provideName, cookieName string, maxlifetime int64) (*Manager, er
 }
 
 // Register makes a session provide available by the provided name.
-// If Register is called twice with the same name or if driver is nil, it panics
 func RegisterNewProvider(name string, provider Provider) {
 	if provider == nil {
 		panic("session: Register provide is nil")
@@ -125,6 +126,7 @@ func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (se
 			HttpOnly: true,
 			Secure:   true,
 			SameSite: http.SameSiteNoneMode,
+			Expires:  time.Now().Add(time.Duration(manager.maxlifetime) * time.Second),
 			MaxAge:   int(manager.maxlifetime)}
 
 		if err = cookie.Valid(); err != nil {

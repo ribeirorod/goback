@@ -31,6 +31,8 @@ func InitDB() {
 }
 
 func Migrate(db *gorm.DB) {
+	// Migrate the schema
 	db.AutoMigrate(&models.User{}, &models.Group{})
-
+	db.AutoMigrate(&models.Session{}, &models.Order{})
+	db.AutoMigrate(&models.Item{}, &models.Voucher{})
 }
